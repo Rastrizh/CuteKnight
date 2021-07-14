@@ -8,6 +8,7 @@
 
 class UTextRenderComponent;
 class UPaperFlipbook;
+class UStateComponent;
 
 UENUM()
 enum AnimState
@@ -179,6 +180,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
 	class AMelee* AttackingBox;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
+	class UStateComponent* CharacterState;
 	
 	void ChangeState(State* state);
 	DECLARE_DELEGATE_OneParam(FChangeStateDelegate, State*);

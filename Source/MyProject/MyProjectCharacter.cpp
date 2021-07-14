@@ -14,6 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Camera/CameraComponent.h"
+#include "StateComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 
@@ -91,6 +92,9 @@ AMyProjectCharacter::AMyProjectCharacter()
 	StabAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Stab.Stab'"), NULL, LOAD_None, NULL);
 	UpStabAnimation= LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/UpStab.UpStab'"), NULL, LOAD_None, NULL);
 	HurtAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Hurt.Hurt'"), NULL, LOAD_None, NULL);
+
+	CharacterState = CreateDefaultSubobject<UStateComponent>(TEXT("CharacterState"));
+	CharacterState->SetFlipbook(IdleAnimation);
 
 	states.Add(static_cast<State*>(new IdleState(IdleAnimation)));
 	states.Add(static_cast<State*>(new SpawnState(SpawnAnimation)));
