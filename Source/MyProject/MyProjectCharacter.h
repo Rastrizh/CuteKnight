@@ -184,11 +184,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
 	class UStateComponent* CharacterState;
 	
-	void ChangeState(State* state);
-	DECLARE_DELEGATE_OneParam(FChangeStateDelegate, State*);
+	TArray<FString> state_names = { "Idle", "Spawn", "Dead", "Walk", "Duck", "Jump", "Stab", "UpStab", "Heart" };
 
-	State* current_state;
-	TArray<State*> states;
+	void ChangeState(FString state_name);
+	DECLARE_DELEGATE_OneParam(FStateDelegate, FString);
+
+	void UpdateState(float DeltaSeconds);
 
 	void SpawnHitBox();
 	void Attack();

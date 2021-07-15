@@ -95,19 +95,6 @@ AMyProjectCharacter::AMyProjectCharacter()
 
 	CharacterState = CreateDefaultSubobject<UStateComponent>(TEXT("CharacterState"));
 	CharacterState->SetFlipbook(IdleAnimation);
-
-	states.Add(static_cast<State*>(new IdleState(IdleAnimation)));
-	states.Add(static_cast<State*>(new SpawnState(SpawnAnimation)));
-	states.Add(static_cast<State*>(new DeadState(DeadAnimation)));
-	states.Add(static_cast<State*>(new WalkState(WalkAnimation)));
-	states.Add(static_cast<State*>(new DuckState(DuckAnimation)));
-	states.Add(static_cast<State*>(new JumpState(JumpAnimation)));
-	states.Add(static_cast<State*>(new StabState(StabAnimation)));
-	states.Add(static_cast<State*>(new UpStabState(UpStabAnimation)));
-	states.Add(static_cast<State*>(new HurtState(HurtAnimation)));
-
-	current_state = states[AnimState::Idle];
-	current_state->prev_state = current_state;
 }
 
 void AMyProjectCharacter::Tick(float DeltaSeconds)
@@ -128,10 +115,10 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyProjectCharacter::Attack);
 
-	PlayerInputComponent->BindAction<FChangeStateDelegate>("Jump", IE_Pressed, this, &AMyProjectCharacter::ChangeState, states[AnimState::Jump]);
-	PlayerInputComponent->BindAction<FChangeStateDelegate>("Attack", IE_Pressed, this, &AMyProjectCharacter::ChangeState, states[AnimState::Stab]);
-	PlayerInputComponent->BindAction<FChangeStateDelegate>("Duck", IE_Pressed, this, &AMyProjectCharacter::ChangeState, states[AnimState::Duck]);
-	PlayerInputComponent->BindAction<FChangeStateDelegate>("Duck", IE_Released, this, &AMyProjectCharacter::ChangeState, states[AnimState::Idle]);
+	PlayerInputComponent->BindAction<FStateDelegate>("Jump", IE_Pressed, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Jump")));
+	PlayerInputComponent->BindAction<FStateDelegate>("Attack", IE_Pressed, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Stab")));
+	PlayerInputComponent->BindAction<FStateDelegate>("Duck", IE_Pressed, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Duck")));
+	PlayerInputComponent->BindAction<FStateDelegate>("Duck", IE_Released, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Idle")));
 
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMyProjectCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AMyProjectCharacter::TouchStopped);
@@ -142,8 +129,8 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 void AMyProjectCharacter::UpdateCharacter(float DeltaSeconds)
 {
 	// Update animation to match the motion
-
-	current_state->Update(*this, DeltaSeconds);
+	UpdateState(DeltaSeconds);
+	GetSprite()->SetFlipbook(CharacterState->GetFlipbook());
 
 	// Now setup the rotation of the controller based on the direction we are travelling
 	const FVector PlayerVelocity = GetVelocity();
@@ -166,19 +153,94 @@ void AMyProjectCharacter::MoveRight(float Value)
 {
 	if (Value != 0.0f && !GetCharacterMovement()->IsFalling() && !isAttacking)
 	{
-		ChangeState(states[AnimState::Walk]);
+		ChangeState(FString(TEXT("Walk")));
 	}
 	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
 }
 
-void AMyProjectCharacter::ChangeState(State* state)
+void AMyProjectCharacter::ChangeState(FString state_name)
 {
-	state->prev_state = current_state;
-	current_state = state;
-	if (!GetSprite()->IsLooping())
+	CharacterState->SetName(state_name);
+}
+
+void AMyProjectCharacter::UpdateState(float DeltaSeconds)
+{
+	if (CharacterState->GetName() == "Idle")
 	{
-		GetSprite()->SetLooping(true);
-		GetSprite()->Play();
+		CharacterState->SetFlipbook(IdleAnimation);
+	}
+	else if (CharacterState->GetName() == "Spawn")
+	{
+		CharacterState->SetFlipbook(SpawnAnimation);
+	}
+	else if (CharacterState->GetName() == "Dead")
+	{
+		CharacterState->SetFlipbook(DeadAnimation);
+	}
+	else if (CharacterState->GetName() == "Walk")
+	{
+		auto PlayerVelosity = GetVelocity();
+		if (PlayerVelosity.X != 0.0f && GetCharacterMovement()->IsFalling())
+		{
+			ChangeState(FString(TEXT("Jump")));
+			return;
+		}
+		else if (PlayerVelosity.X == 0.0f)
+		{
+			ChangeState(FString(TEXT("Idle")));
+			return;
+		}
+		CharacterState->SetFlipbook(WalkAnimation);
+	}
+	else if (CharacterState->GetName() == "Duck")
+	{
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + DeltaSeconds);
+		if (CharacterState->IsAnimationEnds())
+		{
+			GetSprite()->SetLooping(false);
+			CharacterState->SetElapsed(0);
+			return;
+		}
+		CharacterState->SetFlipbook(DuckAnimation);
+	}
+	else if (CharacterState->GetName() == "Jump")
+	{
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + DeltaSeconds);
+		if (CharacterState->IsAnimationEnds())
+		{
+			ChangeState(FString(TEXT("Idle")));
+			CharacterState->SetElapsed(0);
+			return;
+		}
+		CharacterState->SetFlipbook(JumpAnimation);
+	}
+	else if (CharacterState->GetName() == "Stab")
+	{
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + DeltaSeconds);
+
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		DisableInput(PlayerController);
+
+		if (CharacterState->GetElapsed() >= CharacterState->GetDuration() / 2)
+			SpawnHitBox();
+
+		if (CharacterState->IsAnimationEnds())
+		{
+			EnableInput(PlayerController);
+			StopAttack();
+			ChangeState(FString(TEXT("Idle")));
+			CharacterState->SetElapsed(0);
+			return;
+		}
+		CharacterState->SetFlipbook(StabAnimation);
+	}
+	else if (CharacterState->GetName() == "UpStab")
+	{
+		CharacterState->SetFlipbook(UpStabAnimation);
+	}
+	else if (CharacterState->GetName() == "Hurt")
+	{
+		CharacterState->SetFlipbook(HurtAnimation);
 	}
 }
 
@@ -208,115 +270,6 @@ void AMyProjectCharacter::StopAttack()
 {
 	isAttacking = false;
 	AttackingBox = nullptr;
-}
-
-
-void StabState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-	elapsed += DeltaSeconds;
-
-	APlayerController* PlayerController = character.GetWorld()->GetFirstPlayerController();
-	character.DisableInput(PlayerController);
-
-	if (GetElapsed() >= GetDuration() / 2)
-		character.SpawnHitBox();
-
-	if (GetElapsed() >= GetDuration())
-	{
-		character.EnableInput(PlayerController);
-		character.StopAttack();
-		auto PlayerVelosity = character.GetVelocity();
-		if (PlayerVelosity.X == 0.0f)
-		{
-			character.ChangeState(character.states[AnimState::Idle]);
-		}
-		else
-		{
-			character.ChangeState(character.states[AnimState::Walk]);
-		}
-		elapsed = 0;
-		return;
-	}
-	character.GetSprite()->SetFlipbook(m_animation);
-}
-
-void UpStabState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-
-}
-
-void HurtState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-
-}
-
-void JumpState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-	elapsed += DeltaSeconds;
-	if (GetElapsed() >= GetDuration() && !character.GetCharacterMovement()->IsFalling())
-	{
-		character.ChangeState(character.states[AnimState::Idle]);
-		elapsed = 0;
-		return;
-	}
-	character.GetSprite()->SetFlipbook(character.JumpAnimation);
-}
-
-void DuckState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-	elapsed += DeltaSeconds;
-	if (GetElapsed() >= GetDuration())
-	{
-		character.GetSprite()->SetLooping(false);
-		elapsed = 0;
-		return;
-	}
-	character.GetSprite()->SetFlipbook(character.DuckAnimation);
-}
-
-void WalkState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-	auto PlayerVelosity = character.GetVelocity();
-	if (PlayerVelosity.X != 0.0f && character.GetCharacterMovement()->IsFalling())
-	{
-		character.ChangeState(character.states[AnimState::Jump]);
-		return;
-	}
-	else if (PlayerVelosity.X == 0.0f)
-	{
-		character.ChangeState(character.states[AnimState::Idle]);
-		return;
-	}
-	character.GetSprite()->SetFlipbook(character.WalkAnimation);
-}
-
-void DeadState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-
-}
-
-void SpawnState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-	character.GetSprite()->SetFlipbook(character.SpawnAnimation);
-}
-
-void IdleState::Update(AMyProjectCharacter& character, float DeltaSeconds)
-{
-	character.GetSprite()->SetFlipbook(character.IdleAnimation);
-}
-
-State::State(UPaperFlipbook* anim) : m_animation(anim)
-{
-}
-
-float State::GetDuration() const
-{
-	return m_animation->GetTotalDuration() - m_animation->GetTotalDuration() / m_animation->GetFramesPerSecond();
-}
-
-bool State::IsAnimEnds()
-{
-	return true;
 }
 
 void AMyProjectCharacter::TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location)

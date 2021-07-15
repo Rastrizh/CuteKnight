@@ -17,6 +17,9 @@ protected:
 
 	UPROPERTY(Category = Sprite, EditAnywhere, meta = (DisplayThumbnail = "true"))
 	class UPaperFlipbook* SourceFlipbook;
+	
+	UPROPERTY(Category = State, EditAnywhere, meta = (DisplayThumbnail = "true"))
+	FString StateName;
 
 	UPROPERTY()
 	float elapsed;
@@ -27,30 +30,36 @@ protected:
 public:	
 	// Sets default values for this component's properties
 	UStateComponent();
+
+	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
+	void SetName(FString name) { StateName = name; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual void SetFlipbook(UPaperFlipbook* flipbook);
-
-	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual UPaperFlipbook* GetFlipbook() const { return SourceFlipbook; }
-
-	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual void SetPreviousState(UStateComponent* prev_state);
+	FString GetName() const { return StateName; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual UStateComponent* GetPreviousState() const { return PreviousState; }
+	void SetFlipbook(UPaperFlipbook* flipbook);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual float GetDuration() const;
+	UPaperFlipbook* GetFlipbook() const { return SourceFlipbook; }
 
 	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual void SetElapsed(float e);
-
-	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual float GetElapsed() const { return elapsed; }
+	void SetPreviousState(UStateComponent* prev_state);
 	
 	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
-	virtual bool IsAnimationEnds() const { return elapsed >= GetDuration(); }
+	UStateComponent* GetPreviousState() const { return PreviousState; }
+
+	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
+	float GetDuration() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
+	void SetElapsed(float e);
+
+	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
+	float GetElapsed() const { return elapsed; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
+	bool IsAnimationEnds() const { return elapsed >= GetDuration(); }
 
 	bool operator==(const UStateComponent& rhs) const { return SourceFlipbook == rhs.GetFlipbook(); }
 	
