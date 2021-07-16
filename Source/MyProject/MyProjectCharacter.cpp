@@ -161,6 +161,7 @@ void AMyProjectCharacter::MoveRight(float Value)
 void AMyProjectCharacter::ChangeState(FString state_name)
 {
 	CharacterState->SetName(state_name);
+	CharacterState->SetElapsed(0);
 }
 
 void AMyProjectCharacter::UpdateState(float DeltaSeconds)

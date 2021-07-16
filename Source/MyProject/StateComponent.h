@@ -22,7 +22,7 @@ protected:
 	FString StateName;
 
 	UPROPERTY()
-	float elapsed;
+	float elapsed = 0;
 
 	UPROPERTY()
 	UStateComponent* PreviousState;
