@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "PaperFlipbook.h"
 #include "StateComponent.h"
+#include "PaperFlipbook.h"
+#include "PaperCharacter.h"
 
 // Sets default values for this component's properties
 UStateComponent::UStateComponent()
@@ -34,6 +35,17 @@ void UStateComponent::SetElapsed(float e)
 	elapsed = e;
 }
 
+void UStateComponent::ChangeState(FString state_name)
+{
+	SetName(state_name);
+	SetElapsed(0);
+}
+
+void UStateComponent::Update(APaperCharacter* character, float delta_time)
+{
+	character->Update(delta_time);
+}
+
 // Called when the game starts
 void UStateComponent::BeginPlay()
 {
@@ -41,11 +53,6 @@ void UStateComponent::BeginPlay()
 
 	// ...
 	
-}
-
-void UStateComponent::Update(ACharacter&, float DeltaTime)
-{
-
 }
 
 // Called every frame

@@ -7,6 +7,7 @@
 #include "StateComponent.generated.h"
 
 class UPaperFlipbook;
+class APaperCharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MYPROJECT_API UStateComponent : public UActorComponent
@@ -60,14 +61,17 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
 	bool IsAnimationEnds() const { return elapsed >= GetDuration(); }
+		
+	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
+	void ChangeState(FString state_name);
+
+	void Update(APaperCharacter*, float);
 
 	bool operator==(const UStateComponent& rhs) const { return SourceFlipbook == rhs.GetFlipbook(); }
-	
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-	virtual void Update(ACharacter&, float DeltaTime);
 
 public:	
 	// Called every frame

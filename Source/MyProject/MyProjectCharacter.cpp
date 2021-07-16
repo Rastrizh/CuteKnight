@@ -95,6 +95,7 @@ AMyProjectCharacter::AMyProjectCharacter()
 
 	CharacterState = CreateDefaultSubobject<UStateComponent>(TEXT("CharacterState"));
 	CharacterState->SetFlipbook(IdleAnimation);
+	CharacterState->ChangeState(FString(TEXT("Idle")));
 }
 
 void AMyProjectCharacter::Tick(float DeltaSeconds)
@@ -115,10 +116,10 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyProjectCharacter::Attack);
 
-	PlayerInputComponent->BindAction<FStateDelegate>("Jump", IE_Pressed, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Jump")));
-	PlayerInputComponent->BindAction<FStateDelegate>("Attack", IE_Pressed, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Stab")));
-	PlayerInputComponent->BindAction<FStateDelegate>("Duck", IE_Pressed, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Duck")));
-	PlayerInputComponent->BindAction<FStateDelegate>("Duck", IE_Released, this, &AMyProjectCharacter::ChangeState, FString(TEXT("Idle")));
+	PlayerInputComponent->BindAction<FStateDelegate>("Jump", IE_Pressed, CharacterState, &UStateComponent::ChangeState, FString(TEXT("Jump")));
+	PlayerInputComponent->BindAction<FStateDelegate>("Attack", IE_Pressed, CharacterState, &UStateComponent::ChangeState, FString(TEXT("Stab")));
+	PlayerInputComponent->BindAction<FStateDelegate>("Duck", IE_Pressed, CharacterState, &UStateComponent::ChangeState, FString(TEXT("Duck")));
+	PlayerInputComponent->BindAction<FStateDelegate>("Duck", IE_Released, CharacterState, &UStateComponent::ChangeState, FString(TEXT("Idle")));
 
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMyProjectCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AMyProjectCharacter::TouchStopped);
@@ -129,7 +130,7 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 void AMyProjectCharacter::UpdateCharacter(float DeltaSeconds)
 {
 	// Update animation to match the motion
-	UpdateState(DeltaSeconds);
+	CharacterState->Update(this, DeltaSeconds);
 	GetSprite()->SetFlipbook(CharacterState->GetFlipbook());
 
 	// Now setup the rotation of the controller based on the direction we are travelling
@@ -153,18 +154,12 @@ void AMyProjectCharacter::MoveRight(float Value)
 {
 	if (Value != 0.0f && !GetCharacterMovement()->IsFalling() && !isAttacking)
 	{
-		ChangeState(FString(TEXT("Walk")));
+		CharacterState->ChangeState(FString(TEXT("Walk")));
 	}
 	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
 }
 
-void AMyProjectCharacter::ChangeState(FString state_name)
-{
-	CharacterState->SetName(state_name);
-	CharacterState->SetElapsed(0);
-}
-
-void AMyProjectCharacter::UpdateState(float DeltaSeconds)
+void AMyProjectCharacter::Update(float delta_time)
 {
 	if (CharacterState->GetName() == "Idle")
 	{
@@ -183,19 +178,19 @@ void AMyProjectCharacter::UpdateState(float DeltaSeconds)
 		auto PlayerVelosity = GetVelocity();
 		if (PlayerVelosity.X != 0.0f && GetCharacterMovement()->IsFalling())
 		{
-			ChangeState(FString(TEXT("Jump")));
+			CharacterState->ChangeState(FString(TEXT("Jump")));
 			return;
 		}
 		else if (PlayerVelosity.X == 0.0f)
 		{
-			ChangeState(FString(TEXT("Idle")));
+			CharacterState->ChangeState(FString(TEXT("Idle")));
 			return;
 		}
 		CharacterState->SetFlipbook(WalkAnimation);
 	}
 	else if (CharacterState->GetName() == "Duck")
 	{
-		CharacterState->SetElapsed(CharacterState->GetElapsed() + DeltaSeconds);
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + delta_time);
 		if (CharacterState->IsAnimationEnds())
 		{
 			GetSprite()->SetLooping(false);
@@ -206,18 +201,17 @@ void AMyProjectCharacter::UpdateState(float DeltaSeconds)
 	}
 	else if (CharacterState->GetName() == "Jump")
 	{
-		CharacterState->SetElapsed(CharacterState->GetElapsed() + DeltaSeconds);
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + delta_time);
 		if (CharacterState->IsAnimationEnds())
 		{
-			ChangeState(FString(TEXT("Idle")));
-			CharacterState->SetElapsed(0);
+			CharacterState->ChangeState(FString(TEXT("Idle")));
 			return;
 		}
 		CharacterState->SetFlipbook(JumpAnimation);
 	}
 	else if (CharacterState->GetName() == "Stab")
 	{
-		CharacterState->SetElapsed(CharacterState->GetElapsed() + DeltaSeconds);
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + delta_time);
 
 		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 		DisableInput(PlayerController);
@@ -229,8 +223,7 @@ void AMyProjectCharacter::UpdateState(float DeltaSeconds)
 		{
 			EnableInput(PlayerController);
 			StopAttack();
-			ChangeState(FString(TEXT("Idle")));
-			CharacterState->SetElapsed(0);
+			CharacterState->ChangeState(FString(TEXT("Idle")));
 			return;
 		}
 		CharacterState->SetFlipbook(StabAnimation);
