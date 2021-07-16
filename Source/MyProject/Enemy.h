@@ -3,27 +3,36 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "PaperCharacter.h"
 #include "Enemy.generated.h"
 
+/**
+ * 
+ */
 UCLASS()
-class MYPROJECT_API AEnemy : public ACharacter
+class MYPROJECT_API AEnemy : public APaperCharacter
 {
 	GENERATED_BODY()
 
-public:
-	// Sets default values for this character's properties
-	AEnemy();
-
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void Tick( float DeltaSeconds ) override;
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* IdleAnimation;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* DeadAnimation;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
+	class UPaperFlipbook* WalkAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
+	class UStateComponent* CharacterState;
+
+
+	void Update(float delta_time) override;
+
+public:
+	AEnemy();
 };
