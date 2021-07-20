@@ -7,6 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "StateComponent.h"
+#include "MyProjectCharacter.h"
+#include "Melee.h"
 
 AEnemy::AEnemy()
 {
@@ -33,6 +35,28 @@ AEnemy::AEnemy()
 	bReplicates = true;
 
 	CharacterState = CreateDefaultSubobject<UStateComponent>(TEXT("CharacterState"));
+
+	OnActorHit.AddDynamic(this, &AEnemy::OnHit);
+
+	OnActorBeginOverlap.AddDynamic(this, &AEnemy::OnOverlap);
+}
+
+void AEnemy::OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (AMyProjectCharacter *player = Cast<AMyProjectCharacter>(OtherActor))
+	{
+		Destroy(true);
+		UE_LOG(LogTemp, Warning, TEXT("Enemy has been hited by the player!"));
+	}
+}
+
+void AEnemy::OnOverlap(AActor* SelfActor, AActor* OtherActor)
+{
+	if (AMelee *melee = Cast<AMelee>(OtherActor))
+	{
+		Destroy(true);
+		UE_LOG(LogTemp, Warning, TEXT("Enemy has been hited by the players' attack!"));
+	}
 }
 
 void AEnemy::Update(float delta_time)

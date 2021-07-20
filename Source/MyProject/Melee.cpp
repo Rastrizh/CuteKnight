@@ -3,10 +3,15 @@
 
 #include "Melee.h"
 #include "Components/BoxComponent.h"
+#include "Enemy.h"
 
-void AMelee::OnOverlap()
+void AMelee::OnMeleeHit(AActor* SelfActor, AActor* OtherActor)
 {
-	box->DestroyComponent(true);
+	if (AEnemy *enemy = Cast<AEnemy>(OtherActor))
+	{
+		Destroy(true);
+		UE_LOG(LogTemp, Warning, TEXT("hit enemy!"));
+	}
 }
 
 // Sets default values
@@ -16,9 +21,12 @@ AMelee::AMelee()
 	PrimaryActorTick.bCanEverTick = true;
 
 	box = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
-	box->SetBoxExtent({ 16.0f, 16.0f , 16.0f });
+	box->SetBoxExtent({ 8.0f, 8.0f , 8.0f });
 	box->bHiddenInGame = false;
-	box->SetGenerateOverlapEvents(true);
+	box->SetCollisionProfileName(TEXT("OverlapAll"));
+
+	OnActorBeginOverlap.AddDynamic(this, &AMelee::OnMeleeHit);
+	//OnActorHit.AddDynamic(this, &AMelee::OnMeleeHit);
 
 	SetRootComponent(box);
 }
@@ -37,7 +45,7 @@ void AMelee::Tick(float DeltaTime)
 
 	m_life_time += DeltaTime;
 
-	if (m_life_time >= 0.2f || box->OnComponentBeginOverlap.IsBound())
-		this->Destroy(true);
+	if (m_life_time >= 0.2f)
+		Destroy(true);
 }
 

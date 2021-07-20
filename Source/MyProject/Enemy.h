@@ -31,8 +31,14 @@ public:
 	class UStateComponent* CharacterState;
 
 
-	void Update(float delta_time) override;
+	virtual void Update(float delta_time) override;
 
 public:
 	AEnemy();
+
+	UFUNCTION()
+	void OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
+	
+	UFUNCTION()
+	void OnOverlap(AActor* SelfActor, AActor* OtherActor);
 };

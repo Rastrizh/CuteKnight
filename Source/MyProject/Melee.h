@@ -21,8 +21,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Actor, meta = (AllowPrivateAccess = "true"))
 	float m_life_time = 0;
 
-	void OnOverlap();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -31,4 +29,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
+	void OnMeleeHit(AActor* SelfActor, AActor* OtherActor);
 };

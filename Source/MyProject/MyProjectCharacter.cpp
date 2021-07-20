@@ -15,6 +15,8 @@
 #include "GameFramework/Controller.h"
 #include "Camera/CameraComponent.h"
 #include "StateComponent.h"
+#include "Enemy.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 
@@ -96,6 +98,8 @@ AMyProjectCharacter::AMyProjectCharacter()
 	CharacterState = CreateDefaultSubobject<UStateComponent>(TEXT("CharacterState"));
 	CharacterState->SetFlipbook(IdleAnimation);
 	CharacterState->ChangeState(FString(TEXT("Idle")));
+
+	OnActorHit.AddDynamic(this, &AMyProjectCharacter::OnHit);
 }
 
 void AMyProjectCharacter::Tick(float DeltaSeconds)
@@ -104,7 +108,6 @@ void AMyProjectCharacter::Tick(float DeltaSeconds)
 
 	UpdateCharacter(DeltaSeconds);
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -125,6 +128,14 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindTouch(IE_Released, this, &AMyProjectCharacter::TouchStopped);
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMyProjectCharacter::MoveRight);
+}
+
+void AMyProjectCharacter::OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (AEnemy* enemy = Cast<AEnemy>(OtherActor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You has been hited by the enemy!"));
+	}
 }
 
 void AMyProjectCharacter::UpdateCharacter(float DeltaSeconds)
@@ -251,7 +262,7 @@ void AMyProjectCharacter::SpawnHitBox()
 	MeleeTransform.SetRotation(GetActorRotation().Quaternion());
 	MeleeTransform.SetScale3D(FVector(1.0f));
 
-	if (!AttackingBox)
+	if(!AttackingBox)
 		AttackingBox = GetWorld()->SpawnActor<AMelee>(AMelee::StaticClass(), MeleeTransform, SpawnParams);
 }
 

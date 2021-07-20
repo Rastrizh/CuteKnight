@@ -34,7 +34,7 @@ class AMyProjectCharacter : public APaperCharacter
 	virtual void Tick(float DeltaSeconds) override;
 
 	bool isAttacking = false;
-
+	
 public:
 	// The animation to play while idle (standing still)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
@@ -69,8 +69,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
 	class UStateComponent* CharacterState;
-	
-	//void ChangeState(FString state_name);
+
 	DECLARE_DELEGATE_OneParam(FStateDelegate, FString);
 
 	virtual void Update(float delta_time) override;
@@ -93,6 +92,9 @@ public:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	// End of APawn interface
+
+	UFUNCTION()
+	void OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
 
 public:
 	AMyProjectCharacter();
