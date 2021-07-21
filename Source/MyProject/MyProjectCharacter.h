@@ -72,7 +72,7 @@ public:
 
 	DECLARE_DELEGATE_OneParam(FStateDelegate, FString);
 
-	virtual void Update(float delta_time) override;
+	void Update(float delta_time);
 
 	void SpawnHitBox();
 	void Attack();
@@ -94,7 +94,7 @@ public:
 	// End of APawn interface
 
 	UFUNCTION()
-	void OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
+	void OnHit(AActor* SelfActor, AActor* OtherActor);
 
 public:
 	AMyProjectCharacter();

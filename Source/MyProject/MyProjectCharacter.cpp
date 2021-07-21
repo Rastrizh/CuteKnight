@@ -66,11 +66,11 @@ AMyProjectCharacter::AMyProjectCharacter()
 	GetCharacterMovement()->Mass = 30.0f;
 	GetCharacterMovement()->BrakingFrictionFactor = 5.0f;
 	GetCharacterMovement()->AirControl = 20.0f;
-	GetCharacterMovement()->JumpZVelocity = 400.f;
+	GetCharacterMovement()->JumpZVelocity = 300.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 300.0f;
 	GetCharacterMovement()->GroundFriction = 5.0f;
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
-	GetCharacterMovement()->MaxFlySpeed = 400.0f;
+	GetCharacterMovement()->MaxFlySpeed = 300.0f;
 
 	// Lock character motion onto the XZ plane, so the character can't move in or out of the screen
 	GetCharacterMovement()->bConstrainToPlane = true;
@@ -99,7 +99,9 @@ AMyProjectCharacter::AMyProjectCharacter()
 	CharacterState->SetFlipbook(IdleAnimation);
 	CharacterState->ChangeState(FString(TEXT("Idle")));
 
-	OnActorHit.AddDynamic(this, &AMyProjectCharacter::OnHit);
+	OnActorBeginOverlap.AddDynamic(this, &AMyProjectCharacter::OnHit);
+
+	AttackingBox = nullptr;
 }
 
 void AMyProjectCharacter::Tick(float DeltaSeconds)
@@ -130,10 +132,11 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMyProjectCharacter::MoveRight);
 }
 
-void AMyProjectCharacter::OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
+void AMyProjectCharacter::OnHit(AActor* SelfActor, AActor* OtherActor)
 {
 	if (AEnemy* enemy = Cast<AEnemy>(OtherActor))
 	{
+		CharacterState->ChangeState(TEXT("Hurt"));
 		UE_LOG(LogTemp, Warning, TEXT("You has been hited by the enemy!"));
 	}
 }
@@ -141,7 +144,7 @@ void AMyProjectCharacter::OnHit(AActor* SelfActor, AActor* OtherActor, FVector N
 void AMyProjectCharacter::UpdateCharacter(float DeltaSeconds)
 {
 	// Update animation to match the motion
-	CharacterState->Update(this, DeltaSeconds);
+	Update(DeltaSeconds);
 	GetSprite()->SetFlipbook(CharacterState->GetFlipbook());
 
 	// Now setup the rotation of the controller based on the direction we are travelling
@@ -212,6 +215,7 @@ void AMyProjectCharacter::Update(float delta_time)
 	}
 	else if (CharacterState->GetName() == "Jump")
 	{
+		GetCharacterMovement()->AirControl = 20.0f;
 		CharacterState->SetElapsed(CharacterState->GetElapsed() + delta_time);
 		if (CharacterState->IsAnimationEnds())
 		{
@@ -226,9 +230,12 @@ void AMyProjectCharacter::Update(float delta_time)
 
 		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 		DisableInput(PlayerController);
-
-		if (CharacterState->GetElapsed() >= CharacterState->GetDuration() / 2)
-			SpawnHitBox();
+		if (GetCharacterMovement()->IsFalling())
+		{
+			AddMovementInput(FVector(1.0f, 0.0f, 0.0f), -1.0f);
+			GetCharacterMovement()->AirControl = 0.0f;
+		}
+		SpawnHitBox();
 
 		if (CharacterState->IsAnimationEnds())
 		{
@@ -245,12 +252,27 @@ void AMyProjectCharacter::Update(float delta_time)
 	}
 	else if (CharacterState->GetName() == "Hurt")
 	{
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + delta_time);
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		DisableInput(PlayerController);
+		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), -1.0f);
+		GetCharacterMovement()->AirControl = 0.0f;
+		if (CharacterState->IsAnimationEnds())
+		{
+			EnableInput(PlayerController);
+			CharacterState->ChangeState(FString(TEXT("Idle")));
+			return;
+		}
 		CharacterState->SetFlipbook(HurtAnimation);
 	}
 }
 
 void AMyProjectCharacter::SpawnHitBox()
 {
+	if (AttackingBox)
+		if (AttackingBox->IsOverlappingEnemy())
+			return;
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.bNoFail = true;
@@ -262,8 +284,7 @@ void AMyProjectCharacter::SpawnHitBox()
 	MeleeTransform.SetRotation(GetActorRotation().Quaternion());
 	MeleeTransform.SetScale3D(FVector(1.0f));
 
-	if(!AttackingBox)
-		AttackingBox = GetWorld()->SpawnActor<AMelee>(AMelee::StaticClass(), MeleeTransform, SpawnParams);
+	AttackingBox = GetWorld()->SpawnActor<AMelee>(AMelee::StaticClass(), MeleeTransform, SpawnParams);
 }
 
 void AMyProjectCharacter::Attack()
