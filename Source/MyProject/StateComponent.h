@@ -65,8 +65,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Components|Flipbook")
 	void ChangeState(FString state_name);
 
-	void Update(APaperCharacter*, float);
-
 	bool operator==(const UStateComponent& rhs) const { return SourceFlipbook == rhs.GetFlipbook(); }
 
 protected:

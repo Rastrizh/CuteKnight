@@ -41,11 +41,6 @@ void UStateComponent::ChangeState(FString state_name)
 	SetElapsed(0);
 }
 
-void UStateComponent::Update(APaperCharacter* character, float delta_time)
-{
-	character->Update(delta_time);
-}
-
 // Called when the game starts
 void UStateComponent::BeginPlay()
 {

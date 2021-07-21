@@ -4,12 +4,14 @@
 #include "Bat.h"
 #include "PaperFlipbook.h"
 #include "PaperFlipbookComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "StateComponent.h"
 
 void ABat::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	CharacterState->Update(this, DeltaSeconds);
+	this->Update(DeltaSeconds);
+	GetSprite()->SetFlipbook(CharacterState->GetFlipbook());
 }
 
 ABat::ABat()
@@ -18,22 +20,29 @@ ABat::ABat()
 	DeadAnimation = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/Enemies/Bat_Hurt.Bat_Hurt'"), NULL, LOAD_None, NULL);
 	WalkAnimation = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/Enemies/Bat_fly.Bat_fly'"), NULL, LOAD_None, NULL);
 
-	CharacterState->SetFlipbook(IdleAnimation);
+	Cast<UCharacterMovementComponent>(GetMovementComponent())->SetMovementMode(MOVE_Flying, 0);
+
+	CharacterState->SetFlipbook(WalkAnimation);
 	CharacterState->ChangeState(FString(TEXT("Walk")));
 }
 
 void ABat::Update(float delta_time)
 {
-	Super::Update(delta_time);
-
 	if (CharacterState->GetName() == "Idle")
 	{
-		
+		CharacterState->SetFlipbook(IdleAnimation);
 	}
 	else if (CharacterState->GetName() == "Dead")
 	{
+		CharacterState->SetElapsed(CharacterState->GetElapsed() + delta_time);
+
 		if (CharacterState->IsAnimationEnds())
+		{
 			this->Destroy(true);
+			CharacterState->SetElapsed(0.0f);
+		}
+
+		CharacterState->SetFlipbook(DeadAnimation);
 	}
 	else if (CharacterState->GetName() == "Walk")
 	{
@@ -52,5 +61,7 @@ void ABat::Update(float delta_time)
 			}
 		}
 		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), TravelDirection);
+
+		CharacterState->SetFlipbook(WalkAnimation);
 	}
 }

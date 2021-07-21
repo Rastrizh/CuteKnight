@@ -21,6 +21,6 @@ class MYPROJECT_API ABat : public AEnemy
 public:
 	ABat();
 
-	void Update(float delta_time) override;
+	void Update(float delta_time);
 
 };

@@ -20,6 +20,8 @@ AEnemy::AEnemy()
 	// Set the size of our collision capsule.
 	GetCapsuleComponent()->SetCapsuleHalfHeight(14.0f);
 	GetCapsuleComponent()->SetCapsuleRadius(11.0f);
+
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("OverlapAll"));
 	
 	// Lock character motion onto the XZ plane, so the character can't move in or out of the screen
 	GetCharacterMovement()->bConstrainToPlane = true;
@@ -36,49 +38,25 @@ AEnemy::AEnemy()
 
 	CharacterState = CreateDefaultSubobject<UStateComponent>(TEXT("CharacterState"));
 
-	OnActorHit.AddDynamic(this, &AEnemy::OnHit);
-
 	OnActorBeginOverlap.AddDynamic(this, &AEnemy::OnOverlap);
-}
-
-void AEnemy::OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
-{
-	if (AMyProjectCharacter *player = Cast<AMyProjectCharacter>(OtherActor))
-	{
-		Destroy(true);
-		UE_LOG(LogTemp, Warning, TEXT("Enemy has been hited by the player!"));
-	}
 }
 
 void AEnemy::OnOverlap(AActor* SelfActor, AActor* OtherActor)
 {
-	if (AMelee *melee = Cast<AMelee>(OtherActor))
+	if (AMyProjectCharacter *player = Cast<AMyProjectCharacter>(OtherActor))
 	{
-		Destroy(true);
+		CharacterState->ChangeState(TEXT("Dead"));
+		UE_LOG(LogTemp, Warning, TEXT("Enemy has been hited by the player!"));
+	}
+	else if (AMelee *melee = Cast<AMelee>(OtherActor))
+	{
+		SetActorEnableCollision(false);
+		CharacterState->ChangeState(TEXT("Dead"));
 		UE_LOG(LogTemp, Warning, TEXT("Enemy has been hited by the players' attack!"));
-	}
-}
-
-void AEnemy::Update(float delta_time)
-{
-	if (CharacterState->GetName() == "Idle")
-	{
-		CharacterState->SetFlipbook(IdleAnimation);
-	}
-	else if (CharacterState->GetName() == "Dead")
-	{
-		CharacterState->SetFlipbook(DeadAnimation);
-	}
-	else if (CharacterState->GetName() == "Walk")
-	{
-		CharacterState->SetFlipbook(WalkAnimation);
 	}
 }
 
 void AEnemy::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	CharacterState->Update(this, DeltaSeconds);
-	GetSprite()->SetFlipbook(CharacterState->GetFlipbook());
 }
