@@ -9,6 +9,7 @@ void AMelee::OnMeleeHit(AActor* SelfActor, AActor* OtherActor)
 {
 	if (AEnemy *enemy = Cast<AEnemy>(OtherActor))
 	{
+		isOverlappingEnemy = true;
 		Destroy(true);
 		UE_LOG(LogTemp, Warning, TEXT("hit enemy!"));
 	}
@@ -45,7 +46,7 @@ void AMelee::Tick(float DeltaTime)
 
 	m_life_time += DeltaTime;
 
-	if (m_life_time >= 0.2f)
+	if (m_life_time >= 0.1f)
 		Destroy(true);
 }
 

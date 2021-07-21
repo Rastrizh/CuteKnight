@@ -21,6 +21,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Actor, meta = (AllowPrivateAccess = "true"))
 	float m_life_time = 0;
 
+	bool isOverlappingEnemy = false;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -28,6 +30,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	inline bool IsOverlappingEnemy() const { return isOverlappingEnemy; }
 
 	UFUNCTION()
 	void OnMeleeHit(AActor* SelfActor, AActor* OtherActor);
