@@ -19,7 +19,7 @@ class MYPROJECT_API ABat : public AEnemy
 	virtual void Tick(float DeltaSeconds) override;
 
 public:
-	ABat();
+	ABat(const class FObjectInitializer& ObjectInitalizer = FObjectInitializer::Get());
 
 	void Update(float delta_time);
 
