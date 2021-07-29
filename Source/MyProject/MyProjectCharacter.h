@@ -46,7 +46,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* DeadAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* WalkAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
@@ -67,7 +67,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
 	class AMelee* AttackingBox;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = States)
 	class UStateComponent* CharacterState;
 
 	DECLARE_DELEGATE_OneParam(FStateDelegate, FString);
@@ -97,7 +97,7 @@ public:
 	void OnHit(AActor* SelfActor, AActor* OtherActor);
 
 public:
-	AMyProjectCharacter();
+	AMyProjectCharacter(const class FObjectInitializer& ObjectInitalizer = FObjectInitializer::Get());
 
 	/** Returns SideViewCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }

@@ -23,7 +23,9 @@ DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 //////////////////////////////////////////////////////////////////////////
 // AMyProjectCharacter
 
-AMyProjectCharacter::AMyProjectCharacter()
+AMyProjectCharacter::AMyProjectCharacter(const FObjectInitializer& ObjectInitializer)
+	:
+	Super(ObjectInitializer)
 {
 	// Use only Yaw from the controller and ignore the rest of the rotation.
 	bUseControllerRotationPitch = false;
@@ -85,15 +87,44 @@ AMyProjectCharacter::AMyProjectCharacter()
 	GetSprite()->SetIsReplicated(true);
 	bReplicates = true;
 	
-	IdleAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Idle.Idle'"), NULL, LOAD_None, NULL);
-	SpawnAnimation = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Spawn.Spawn'"), NULL, LOAD_None, NULL);
-	DeadAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Dead.Dead'"), NULL, LOAD_None, NULL);
-	WalkAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Walk.Walk'"), NULL, LOAD_None, NULL);
-	DuckAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Duck.Duck'"), NULL, LOAD_None, NULL);
-	JumpAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Jump.Jump'"), NULL, LOAD_None, NULL);
-	StabAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Stab.Stab'"), NULL, LOAD_None, NULL);
-	UpStabAnimation= LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/UpStab.UpStab'"), NULL, LOAD_None, NULL);
-	HurtAnimation  = LoadObject<UPaperFlipbook>(NULL, TEXT("PaperFlipbook'/Game/CuteNight/Animations/Hurt.Hurt'"), NULL, LOAD_None, NULL);
+	struct FConstructorStatics
+	{
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation0;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation1;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation2;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation3;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation4;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation5;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation6;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation7;
+		ConstructorHelpers::FObjectFinder<UPaperFlipbook> Animation8;
+
+		FConstructorStatics()
+			:
+			Animation0(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Idle.Idle'")),
+			Animation1(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Spawn.Spawn'")),
+			Animation2(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Dead.Dead'")),
+			Animation3(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Walk.Walk'")),
+			Animation4(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Duck.Duck'")),
+			Animation5(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Jump.Jump'")),
+			Animation6(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Stab.Stab'")),
+			Animation7(TEXT("PaperFlipbook'/Game/CuteNight/Animations/UpStab.UpStab'")),
+			Animation8(TEXT("PaperFlipbook'/Game/CuteNight/Animations/Hurt.Hurt'"))
+		{}
+	};
+	static FConstructorStatics ConstructorStatics;
+
+	IdleAnimation  = ConstructorStatics.Animation0.Object;
+	SpawnAnimation = ConstructorStatics.Animation1.Object;
+	DeadAnimation  = ConstructorStatics.Animation2.Object;
+	WalkAnimation  = ConstructorStatics.Animation3.Object;
+	DuckAnimation  = ConstructorStatics.Animation4.Object;
+	JumpAnimation  = ConstructorStatics.Animation5.Object;
+	StabAnimation  = ConstructorStatics.Animation6.Object;
+	UpStabAnimation= ConstructorStatics.Animation7.Object;
+	HurtAnimation  = ConstructorStatics.Animation8.Object;
+
+	GetSprite()->SetFlipbook(IdleAnimation);
 
 	CharacterState = CreateDefaultSubobject<UStateComponent>(TEXT("CharacterState"));
 	CharacterState->SetFlipbook(IdleAnimation);
@@ -284,7 +315,7 @@ void AMyProjectCharacter::SpawnHitBox()
 	MeleeTransform.SetRotation(GetActorRotation().Quaternion());
 	MeleeTransform.SetScale3D(FVector(1.0f));
 
-	AttackingBox = GetWorld()->SpawnActor<AMelee>(AMelee::StaticClass(), MeleeTransform, SpawnParams);
+	GetWorld()->SpawnActor<AMelee>(AMelee::StaticClass(), MeleeTransform, SpawnParams);
 }
 
 void AMyProjectCharacter::Attack()
