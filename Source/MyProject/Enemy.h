@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class MYPROJECT_API AEnemy : public APaperCharacter
 {
 	GENERATED_BODY()
@@ -24,15 +24,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* DeadAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* WalkAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = States)
 	class UStateComponent* CharacterState;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	class UPawnSensingComponent *Senses;
+
+protected:
+	UPROPERTY()
+	FVector PlayerLocation;
+
 public:
-	AEnemy();
+	AEnemy(const class FObjectInitializer& ObjectInitalizer = FObjectInitializer::Get());
 		
 	UFUNCTION()
 	void OnOverlap(AActor* SelfActor, AActor* OtherActor);
+
+	UFUNCTION()
+	void OnSeePawn(APawn* pawn);
 };
