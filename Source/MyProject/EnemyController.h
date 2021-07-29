@@ -27,6 +27,4 @@ private:
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	class UBehaviorTree* btree;
-
-	class UBlackboardComponent* bboard;
 };

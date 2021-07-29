@@ -16,10 +16,10 @@ class MYPROJECT_API UStateComponent : public UActorComponent
 		
 protected:
 
-	UPROPERTY(Category = Sprite, EditAnywhere, meta = (DisplayThumbnail = "true"))
+	UPROPERTY(EditAnywhere, meta = (DisplayThumbnail = "true"))
 	class UPaperFlipbook* SourceFlipbook;
 	
-	UPROPERTY(Category = State, EditAnywhere, meta = (DisplayThumbnail = "true"))
+	UPROPERTY(VisibleAnywhere, meta = (DisplayThumbnail = "true"))
 	FString StateName;
 
 	UPROPERTY()

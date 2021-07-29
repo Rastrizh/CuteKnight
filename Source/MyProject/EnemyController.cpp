@@ -15,26 +15,23 @@ AEnemyController::AEnemyController(FObjectInitializer const& object_initializer 
 		btree = obj.Object;
 	}
 	behavior_tree_component = object_initializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("BehaviorComp"));
-	bboard = object_initializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackboardComp"));
+	Blackboard = object_initializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackboardComp"));
 }
 
 void AEnemyController::BeginPlay()
 {
 	Super::BeginPlay();
-	RunBehaviorTree(btree);
-	behavior_tree_component->StartTree(*btree);
+
+	if(RunBehaviorTree(btree))
+		behavior_tree_component->StartTree(*btree);
 }
 
 void AEnemyController::OnPossess(APawn* const pawn)
 {
 	Super::OnPossess(pawn);
-	if (bboard)
-	{
-		bboard->InitializeBlackboard(*btree->BlackboardAsset);
-	}
 }
 
 class UBlackboardComponent* AEnemyController::get_blackboard() const
 {
-	return bboard;
+	return Blackboard;
 }
